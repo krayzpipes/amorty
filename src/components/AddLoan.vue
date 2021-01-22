@@ -32,7 +32,7 @@
             <Button icon="pi pi-replay" class="p-button-rounded p-button-text" :disabled="!needReCalc" @click="calculatePayment"></Button>
           </div>
           <div class="p-col-fixed" style="width:100px">
-            <Button label="Add" icon="pi pi-angle-double-right" iconPos="right" class="p-button-sm p-button-outlined"></Button>
+            <Button label="Add" icon="pi pi-angle-double-right" iconPos="right" class="p-button-sm p-button-outlined" @click="addLoan"></Button>
           </div>
         </div>
       </div>
@@ -41,20 +41,23 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, defineComponent } from 'vue'
 import Decimal from 'decimal.js'
 
-export default {
+export default defineComponent({
   name: 'AddLoan',
-  setup() {
+  emits: {
+    'new-loan': null
+  },
+  setup(_, context) {
     let loanName = ref('');
     let loanAmount = ref(100000.00);
     let interestRate = ref(3.75);
     let paymentAmount = ref(0);
     let loanTerms = [{label: '15 yrs', key: '15'}, {label: '30 yrs', key: '30'}];
     let loanLength = ref('30');
-    let needReCalc = ref(true);
-    let reCalcDisabled = ref(false);
+    let needReCalc = true;
+    let reCalcDisabled = false;
     function calculatePayment() {
       let lAmount = new Decimal(loanAmount.value);
       let yearlyRate = new Decimal(interestRate.value);
@@ -65,7 +68,47 @@ export default {
       let denominator = onePlusMonthlyRate.pow(numOfMonths).minus(1);
       let payment = lAmount.mul(monthlyInterestRate).mul(numerator.div(denominator));
       paymentAmount.value = payment.toDecimalPlaces(2).toNumber();
-      needReCalc.value = false
+      needReCalc = false;
+    }
+    function addLoan() {
+      let loanObject = {
+        name: loanName.value,
+        type: "Home",
+        amount: loanAmount.value,
+        term: loanLength.value,
+        rate: interestRate.value,
+        payment: paymentAmount.value,
+        amort: amortSchedule(loanAmount.value, paymentAmount.value, interestRate.value, 0, 0)
+      }
+      context.emit('new-loan', loanObject)
+    }
+    function amortSchedule(loanValue, paymentValue, rateValue, extraPayment, lumpSum) {
+      let principal = new Decimal(loanValue).toDecimalPlaces(2);
+      let payment = new Decimal(paymentValue).toDecimalPlaces(2);
+      let monthlyRate = new Decimal(rateValue).mul(.01).div(12).toDecimalPlaces(12);
+      let extra = new Decimal(extraPayment).toDecimalPlaces(2);
+      let lump = new Decimal(lumpSum).toDecimalPlaces(2);
+      let interestPayment = monthlyRate.mul(principal).toDecimalPlaces(2);
+      let principalPayment = payment.minus(interestPayment);
+      let remainingPrincipal = principal.sub(principalPayment.plus(extra).plus(lump));
+      let schedule = [];
+      schedule.push(amortRowObject(principal, principalPayment, interestPayment, extra, lump))
+      while (remainingPrincipal.greaterThan(0)) {
+        interestPayment = monthlyRate.mul(remainingPrincipal).toDecimalPlaces(2);
+        principalPayment = payment.minus(interestPayment);
+        schedule.push(amortRowObject(remainingPrincipal, principalPayment, interestPayment, extra, lump));
+        remainingPrincipal = remainingPrincipal.sub(principalPayment.plus(extra).plus(lump));
+      }
+      return schedule
+    }
+    function amortRowObject(principal, principalPayment, interestPayment, extraPayment, lumpSum) {
+      return {
+        principal: principal.toNumber(),
+        principalPayment: principalPayment.toNumber(),
+        interestPayment: interestPayment.toNumber(),
+        extraPayment: extraPayment.toNumber(),
+        lumpSum: lumpSum.toNumber()
+      }
     }
     return {
       loanName,
@@ -77,7 +120,8 @@ export default {
       needReCalc,
       reCalcDisabled,
       calculatePayment,
+      addLoan
     }
   }
-}
+})
 </script>
