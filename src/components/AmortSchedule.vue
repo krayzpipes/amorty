@@ -1,28 +1,28 @@
 <template>
   <TabView>
-    <TabPanel v-for="loan in loans" :header="loan.name">
-      <DataTable :value="loan.amort" class="p-datatable-sm">
-        <Column field="principal" header="Remaining Principal">
+    <TabPanel v-for="loan in loans" :header="loan.name" :key="loan.name">
+      <DataTable :key="loan.name" :value="loan.amort" class="p-datatable-sm" :scrollable="true" scrollHeight="400px" :loading="loading">
+        <Column :key="loan.name" field="principal" header="Remaining Principal">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.principal)}}
           </template>
         </Column>
-        <Column field="principalPayment" header="Principal">
+        <Column :key="loan.name" field="principalPayment" header="Principal">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.principalPayment)}}
           </template>
         </Column>
-        <Column field="interestPayment" header="Interest">
+        <Column :key="loan.name" field="interestPayment" header="Interest">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.interestPayment)}}
           </template>
         </Column>
-        <Column field="extraPayment" header="Extra Payment">
+        <Column :key="loan.name" field="extraPayment" header="Extra Payment">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.extraPayment)}}
           </template>
         </Column>
-        <Column field="lumpSum" header="Lump Sum">
+        <Column :key="loan.name" field="lumpSum" header="Lump Sum">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.lumpSum)}}
           </template>
@@ -37,9 +37,7 @@ import { defineComponent } from 'vue'
 
 export default defineComponent({
   name: 'AmortSchedule',
-  props: {
-    loans: Object
-  },
+  props: ['loans'],
   emit: ['update-row'],
   setup() {
     function toCurrency(value) {

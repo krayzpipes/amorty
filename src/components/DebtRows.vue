@@ -1,6 +1,6 @@
 <template>
   <Toast position="top-right"></Toast>
-  <DataTable :value="loans" @row-reorder="onRowReorder" class="p-datatable-sm">
+  <DataTable :value="loans" @row-reorder="onRowReorder" v-model:selection="selectedData" selectionMode="multiple" dataKey="id" @row-select="selectLoan" @row-unselect="deselectLoan" :metaKeySelection="false" class="p-datatable-sm">
     <template #header>
       <div class="p-datatable-header p-jc-between p-ai-center p-grid">
         <div class="p-col p-ai-center">
@@ -70,7 +70,8 @@ export default defineComponent({
       {field: 'rate', header: 'Rate'},
       {field: 'payment', header: 'Payment'}
     ]
-    let loans = ref([])
+    let loans = ref([]);
+    let selectedData = ref([])
     /*let loans = ref([
       {name: "Test Loan 1", type: "Home", amount: "125000", term: "30", rate: "3.758", payment: 0, amort: {}},
       {name: "Test Loan 2", type: "Car", amount: "125000", term: "15", rate: "3.275", payment: 0, amort: {}},
@@ -138,15 +139,18 @@ export default defineComponent({
       addOp.value.toggle(event);
     }
     function selectLoan(loanData) {
-      context.emit('select-loan', loanData);
+      console.log("SELECTED LOAN!!!")
+      console.log(loanData)
+      context.emit('select-loan', loanData.data);
     }
     function deselectLoan(loanData) {
-      context.emit('deselect-loan', loanData);
+      context.emit('deselect-loan', loanData.data);
     }
     return {
       addOp,
       columns,
       loans,
+      selectedData,
       calculatePayment,
       toCurrency,
       onRowReorder,
