@@ -43,13 +43,17 @@
 <script>
 import { ref, defineComponent } from 'vue'
 import Decimal from 'decimal.js'
+import { v4 as uuidv4 } from 'uuid'
+import { useStore } from 'vuex'
+import { amortSchedule } from '../maths.js'
 
 export default defineComponent({
   name: 'AddLoan',
   emits: {
     'new-loan': null
   },
-  setup(_, context) {
+  setup() {
+    const store = useStore();
     let loanName = ref('');
     let loanAmount = ref(100000.00);
     let interestRate = ref(3.75);
@@ -72,6 +76,7 @@ export default defineComponent({
     }
     function addLoan() {
       let loanObject = {
+        uuid: uuidv4(),
         name: loanName.value,
         type: "Home",
         amount: loanAmount.value,
@@ -80,35 +85,9 @@ export default defineComponent({
         payment: paymentAmount.value,
         amort: amortSchedule(loanAmount.value, paymentAmount.value, interestRate.value, 0, 0)
       }
-      context.emit('new-loan', loanObject)
-    }
-    function amortSchedule(loanValue, paymentValue, rateValue, extraPayment, lumpSum) {
-      let principal = new Decimal(loanValue).toDecimalPlaces(2);
-      let payment = new Decimal(paymentValue).toDecimalPlaces(2);
-      let monthlyRate = new Decimal(rateValue).mul(.01).div(12).toDecimalPlaces(12);
-      let extra = new Decimal(extraPayment).toDecimalPlaces(2);
-      let lump = new Decimal(lumpSum).toDecimalPlaces(2);
-      let interestPayment = monthlyRate.mul(principal).toDecimalPlaces(2);
-      let principalPayment = payment.minus(interestPayment);
-      let remainingPrincipal = principal.sub(principalPayment.plus(extra).plus(lump));
-      let schedule = [];
-      schedule.push(amortRowObject(principal, principalPayment, interestPayment, extra, lump))
-      while (remainingPrincipal.greaterThan(0)) {
-        interestPayment = monthlyRate.mul(remainingPrincipal).toDecimalPlaces(2);
-        principalPayment = payment.minus(interestPayment);
-        schedule.push(amortRowObject(remainingPrincipal, principalPayment, interestPayment, extra, lump));
-        remainingPrincipal = remainingPrincipal.sub(principalPayment.plus(extra).plus(lump));
-      }
-      return schedule
-    }
-    function amortRowObject(principal, principalPayment, interestPayment, extraPayment, lumpSum) {
-      return {
-        principal: principal.toNumber(),
-        principalPayment: principalPayment.toNumber(),
-        interestPayment: interestPayment.toNumber(),
-        extraPayment: extraPayment.toNumber(),
-        lumpSum: lumpSum.toNumber()
-      }
+      store.commit('addLoan', loanObject);
+      console.log("added new loan to store: " + loanObject.uuid);
+      // context.emit('new-loan', loanObject)
     }
     return {
       loanName,

@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import store from './store'                                 // Vuex store
 import App from './App.vue'
 
 import PrimeVue from 'primevue/config'
@@ -23,9 +24,11 @@ import 'primevue/resources/themes/vela-green/theme.css'       //theme
 import 'primevue/resources/primevue.min.css'                 //core css
 import 'primeicons/primeicons.css'       //icons
 import 'primeflex/primeflex.css'
+import 'es6-promise/auto'                                    // Promise for Vuex
 
 const app = createApp(App);
 
+app.use(store);
 app.use(PrimeVue);
 app.use(ToastService);
 

@@ -1,6 +1,6 @@
 <template>
   <Toast position="top-right"></Toast>
-  <DataTable :value="loans" @row-reorder="onRowReorder" v-model:selection="selectedData" selectionMode="multiple" dataKey="id" @row-select="selectLoan" @row-unselect="deselectLoan" :metaKeySelection="false" class="p-datatable-sm">
+  <DataTable :value="loans" v-model:selection="selectedData" selectionMode="multiple" dataKey="uuid" @row-select="selectLoan" @row-unselect="deselectLoan" :metaKeySelection="false" class="p-datatable-sm" :scrollable="true" scrollHeight="400px">
     <template #header>
       <div class="p-datatable-header p-jc-between p-ai-center p-grid">
         <div class="p-col p-ai-center">
@@ -41,17 +41,18 @@
     </Column>
     <Column headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
       <template #body="slotProps">
-        <Button type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text" @click="deleteRow(slotProps.data.name, slotProps.index)"></Button>
+        <Button type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text" @click="deleteRow(slotProps.data.uuid)"></Button>
       </template>
     </Column>
   </DataTable>
 </template>
 
 <script>
-import { ref, defineComponent} from 'vue'
+import { ref, defineComponent, computed } from 'vue'
 import Decimal from 'decimal.js'
 import { useToast } from 'primevue/usetoast'
 import AddLoan from './AddLoan'
+import { useStore } from 'vuex'
 
 export default defineComponent({
   name: 'DebtRows',
@@ -59,8 +60,9 @@ export default defineComponent({
     AddLoan
   },
   emit: ['select-loan', 'deselect-loan'],
-  setup(props, context) {
-    const addOp = ref(null)
+  setup() {
+    const store = useStore();
+    const addOp = ref(null);
     const toast = useToast();
     let columns = [
       {field: 'name', header: 'Name'},
@@ -70,7 +72,7 @@ export default defineComponent({
       {field: 'rate', header: 'Rate'},
       {field: 'payment', header: 'Payment'}
     ]
-    let loans = ref([]);
+    let loans = computed(() => store.getters.getLoans);
     let selectedData = ref([])
     /*let loans = ref([
       {name: "Test Loan 1", type: "Home", amount: "125000", term: "30", rate: "3.758", payment: 0, amort: {}},
@@ -120,32 +122,63 @@ export default defineComponent({
       )
       return formatter.format(value)
     }
-    function onRowReorder(event) {
-      loans.value = event.value
-    }
-    function deleteRow(name, index) {
-      loans.value.splice(index, 1);
+    function deleteRow(uuid) {
+      store.dispatch('deleteLoan', uuid);
+      console.log("deleted loan: " + uuid);
+      let index = findSelectedLoanIndex(uuid);
+      if (index != null) {
+        selectedData.value.splice(index, 1);
+        syncSelectedLoans();
+        console.log("deleted loan from selected loans: " + uuid);
+      }
+      console.log("Local selected loans: " + forEachHelper(selectedData.value));
+      console.log("State selected loans: " + forEachHelper(store.getters.selectedLoans));
     }
     function addNewLoan(event) {
-      console.log("NEW EVENT");
-      console.log(event);
+      // Actual loan is added to state/store in button component
       addOp.value.hide();
-      loans.value.push(event)
       toast.add({severity: 'success', summary: 'Loan Added', detail: 'Loan "' + event.name + '" was added', life: 2000})
-
     }
     function toggleLoanOverlay(event) {
-      console.log(event);
       addOp.value.toggle(event);
     }
-    function selectLoan(loanData) {
-      console.log("SELECTED LOAN!!!")
-      console.log(loanData)
-      context.emit('select-loan', loanData.data);
+    function selectLoan(event) {
+      syncSelectedLoans();
+      console.log("Selected loan: " + event.data.uuid);
+      console.log("Local selected loans: " + forEachHelper(selectedData.value));
+      console.log("State selected loans: " + forEachHelper(store.getters.selectedLoans));
+      //context.emit('select-loan', loanData.data);
     }
-    function deselectLoan(loanData) {
-      context.emit('deselect-loan', loanData.data);
+    function deselectLoan(event) {
+      syncSelectedLoans();
+      console.log("Deselected loan: " + event.data.uuid);
+      console.log("Local selected loans: " + forEachHelper(selectedData.value));
+      console.log("State selected loans: " + forEachHelper(store.getters.selectedLoans));
     }
+    function syncSelectedLoans() {
+      store.commit('updateSelectedLoans', selectedData.value);
+    }
+    function findSelectedLoanIndex(uuid) {
+      for (let i = 0; i < selectedData.value.length; i++) {
+        if (selectedData.value[i].uuid == uuid) {
+          return i
+        }
+      }
+      console.log("Should have found loan in selected data, but did not: " + uuid);
+      return null
+    }
+    function forEachHelper(objList) {
+      let newList = [];
+      let loan;
+      for (loan of objList) {
+        newList.push(loan.uuid);
+      }
+      return newList
+    }
+    //function
+    //function deselectLoan(loanData) {
+      //context.emit('deselect-loan', loanData.data);
+    //}
     return {
       addOp,
       columns,
@@ -153,7 +186,6 @@ export default defineComponent({
       selectedData,
       calculatePayment,
       toCurrency,
-      onRowReorder,
       getLoanIcon,
       deleteRow,
       addNewLoan,

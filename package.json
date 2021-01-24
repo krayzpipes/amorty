@@ -10,11 +10,14 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "decimal.js": "^10.2.1",
+    "es6-promise": "^4.2.8",
     "mitt": "^2.1.0",
     "primeflex": "^2.0.0",
     "primeicons": "^4.1.0",
     "primevue": "^3.1.2",
-    "vue": "^3.0.0"
+    "uuid": "^3.4.0",
+    "vue": "^3.0.0",
+    "vuex": "^4.0.0-rc.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
