@@ -41,6 +41,7 @@
     </Column>
     <Column headerStyle="width: 8rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
       <template #body="slotProps">
+        <Button type="button" icon="pi pi-copy" class="p-button-rounded p-button-info p-button-text" @click="copyRow(slotProps.data)"></Button>
         <Button type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text" @click="deleteRow(slotProps.data.uuid)"></Button>
       </template>
     </Column>
@@ -53,13 +54,14 @@ import Decimal from 'decimal.js'
 import { useToast } from 'primevue/usetoast'
 import AddLoan from './AddLoan'
 import { useStore } from 'vuex'
+import {v4 as uuidv4} from "uuid";
+import {amortSchedule} from "@/maths";
 
 export default defineComponent({
   name: 'DebtRows',
   components: {
     AddLoan
   },
-  emit: ['select-loan', 'deselect-loan'],
   setup() {
     const store = useStore();
     const addOp = ref(null);
@@ -167,6 +169,22 @@ export default defineComponent({
       console.log("Should have found loan in selected data, but did not: " + uuid);
       return null
     }
+    function copyRow(loanData) {
+      let uuid = uuidv4();
+      let loanObject = {
+        uuid: uuid,
+        name: loanData.name + "-" + uuid.substring(0, 4),
+        type: loanData.type,
+        amount: loanData.amount,
+        term: loanData.term,
+        rate: loanData.rate,
+        payment: loanData.payment,
+        amort: amortSchedule(loanData.amount, loanData.payment, loanData.rate, 0, 0)
+      }
+      store.commit('addLoan', loanObject);
+      console.log("added new loan to store: " + loanObject.uuid);
+      // context.emit('new-loan', loanObject)
+    }
     function forEachHelper(objList) {
       let newList = [];
       let loan;
@@ -191,7 +209,8 @@ export default defineComponent({
       addNewLoan,
       toggleLoanOverlay,
       selectLoan,
-      deselectLoan
+      deselectLoan,
+      copyRow
     }
   }
 })

@@ -9,12 +9,19 @@
       <div class="p-col-6">
         <Card>
           <template #content>
-            <DebtRows @select-loan="addSelectedLoan" @deselect-loan="deleteSelectedLoan"></DebtRows>
+            <DebtRows></DebtRows>
           </template>
         </Card>
       </div>
       <div class="p-col-6">
         <AmortSchedule :loans="selectedLoans"></AmortSchedule>
+      </div>
+      <div class="p-col-8">
+        <Card>
+          <template #content>
+            <AmortGraph></AmortGraph>
+          </template>
+        </Card>
       </div>
     </div>
   </div>
@@ -25,12 +32,14 @@
 import { ref } from 'vue'
 import DebtRows from './DebtRows'
 import AmortSchedule from './AmortSchedule'
+import AmortGraph from './AmortGraph'
 
 export default {
   name: 'AmortFrame',
   components: {
     AmortSchedule,
-    DebtRows
+    DebtRows,
+    AmortGraph
   },
   setup() {
     let selectedLoans = ref([]);

@@ -20,6 +20,10 @@ import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 
+import Chart from 'primevue/chart';
+
+
+
 import 'primevue/resources/themes/vela-green/theme.css'       //theme
 import 'primevue/resources/primevue.min.css'                 //core css
 import 'primeicons/primeicons.css'       //icons
@@ -47,5 +51,6 @@ app.component('Card', Card);
 app.component('Dialog', Dialog);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
+app.component('Chart', Chart);
 
 app.mount('#app');

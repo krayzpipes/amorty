@@ -1,7 +1,8 @@
 <template>
   <TabView>
     <TabPanel v-for="loan in selectedLoans" :header="loan.name" :key="loan.uuid">
-      <DataTable :key="loan.uuid" :value="loan.amort" class="p-datatable-sm" :scrollable="true" scrollHeight="400px" :loading="loading">
+      <DataTable :key="loan.uuid" :value="loan.amort" class="p-datatable-sm" :scrollable="true" scrollHeight="400px">
+        <Column :key="loan.uuid" field="index" header="Period"></Column>
         <Column :key="loan.uuid" field="principal" header="Remaining Principal">
           <template #body="slotProps">
             {{toCurrency(slotProps.data.principal)}}
